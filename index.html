@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basename Checker</title>
+</head>
+<body>
+  <h2>Basename Checker</h2>
+
+  <input id="nameInput" placeholder="example.base.eth" />
+  <button onclick="checkName()">Check</button>
+
+  <p id="result"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
+
+  <script>
+    // Base RPC
+    const provider = new ethers.JsonRpcProvider(
+      "https://mainnet.base.org"
+    );
+
+    // ENS Registry
+    const ENS_REGISTRY =
+      "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
+
+    // minimal ABI
+    const abi = [
+      "function owner(bytes32 node) view returns (address)"
+    ];
+
+    async function checkName() {
+
+      const name = document
+        .getElementById("nameInput")
+        .value
+        .trim();
+
+      const result = document.getElementById("result");
+
+      try {
+
+        // namehash生成
+        const node = ethers.namehash(name);
+
+        const contract = new ethers.Contract(
+          ENS_REGISTRY,
+          abi,
+          provider
+        );
+
+        const owner = await contract.owner(node);
+
+        if (
+          owner === "0x0000000000000000000000000000000000000000"
+        ) {
+          result.innerText = "✅ Available";
+        } else {
+          result.innerText =
+            "❌ Registered: " + owner;
+        }
+
+      } catch (err) {
+        result.innerText = "Error";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
